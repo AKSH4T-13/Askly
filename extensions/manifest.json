@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AI Page Chat",
+  "version": "1.0",
+  "description": "Ask questions about the current webpage using AI",
+
+  "permissions": [
+    "tabs"
+  ],
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
