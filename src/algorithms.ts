@@ -1,0 +1,30 @@
+export const algorithms = {
+ bubble:{name:'Bubble Sort',group:'Sorting',time:'O(n²)',space:'O(1)',code:['for each pass','compare adjacent values','swap if left > right','mark final position sorted']},
+ selection:{name:'Selection Sort',group:'Sorting',time:'O(n²)',space:'O(1)',code:['for each position','find minimum in suffix','swap minimum into position','mark position sorted']},
+ insertion:{name:'Insertion Sort',group:'Sorting',time:'O(n²)',space:'O(1)',code:['for each unsorted element','compare with previous','swap backwards while smaller','prefix is sorted']},
+ merge:{name:'Merge Sort',group:'Sorting',time:'O(n log n)',space:'O(n)',code:['split range','sort both halves','merge into temporary array','write merged values back']},
+ quick:{name:'Quick Sort',group:'Sorting',time:'O(n²) worst; O(n log n) average',space:'O(n) worst stack',code:['choose last value as pivot','compare each value with pivot','move smaller values left','place pivot and recurse']},
+ linear:{name:'Linear Search',group:'Searching',time:'O(n)',space:'O(1)',code:['for each index','compare value with target','if equal: return index','return not found']},
+ binary:{name:'Binary Search',group:'Searching',time:'O(log n)',space:'O(1)',code:['initialize low and high','inspect midpoint','if equal: return mid','discard half without target','return not found']},
+ rotated:{name:'Rotated Sorted Search',group:'Searching',time:'O(log n)',space:'O(1)',code:['initialize low and high','inspect midpoint','if equal: return mid','identify sorted half','keep half containing target','return not found']}
+} as const;
+export type Algorithm=keyof typeof algorithms;
+export type Step={values:number[];active:number[];sorted:number[];line:number;message:string;vars:Record<string,number|string>;found?:number};
+export function parseValues(raw:string):number[]{const a=raw.trim().split(/[\s,]+/).map(Number);if(!raw.trim()||a.length>32||a.some(v=>!Number.isInteger(v)||Math.abs(v)>999))throw Error('Enter 1–32 integers between −999 and 999.');return a;}
+export function trace(key:Algorithm,input:number[],target=0):Step[]{
+ if(!input.length)throw Error('An array is required.');
+ if(key==='binary'&&input.some((v,i)=>i>0&&v<input[i-1]))throw Error('Binary search needs an ascending sorted array.');
+ if(key==='rotated'){if(new Set(input).size!==input.length)throw Error('Rotated search requires distinct values.');let drops=0;for(let i=0;i<input.length;i++)if(input[i]>input[(i+1)%input.length])drops++;if(drops>1)throw Error('Use a sorted array rotated at most once.');}
+ const a=[...input],steps:Step[]=[],done=new Set<number>();
+ const push=(line:number,message:string,active:number[]=[],vars:Step['vars']={},found?:number)=>steps.push({values:[...a],active:[...active],sorted:[...done],line,message,vars:{...vars},found});
+ push(0,'Ready. Press Play or move one step at a time.');
+ if(key==='bubble')for(let end=a.length-1;end>=0;end--){for(let j=0;j<end;j++){push(1,`Compare ${a[j]} and ${a[j+1]}.`,[j,j+1],{j,end});if(a[j]>a[j+1]){[a[j],a[j+1]]=[a[j+1],a[j]];push(2,'Swap: left value is larger.',[j,j+1],{j,end});}}done.add(end);push(3,`Index ${end} is now sorted.`);}
+ if(key==='selection')for(let i=0;i<a.length;i++){let min=i;for(let j=i+1;j<a.length;j++){push(1,`Compare minimum ${a[min]} with ${a[j]}.`,[min,j],{i,j,min});if(a[j]<a[min])min=j;}[a[i],a[min]]=[a[min],a[i]];push(2,`Place minimum ${a[i]} at index ${i}.`,[i,min],{i,min});done.add(i);push(3,'Position sorted.');}
+ if(key==='insertion'){done.add(0);for(let i=1;i<a.length;i++){let j=i;while(j>0){push(1,`Compare ${a[j-1]} and ${a[j]}.`,[j-1,j],{i,j});if(a[j-1]<=a[j])break;[a[j-1],a[j]]=[a[j],a[j-1]];push(2,'Swap backwards into the sorted prefix.',[j-1,j],{i,j});j--;}done.add(i);push(3,`Prefix through index ${i} is sorted.`);}}
+ if(key==='merge'){const sort=(lo:number,hi:number)=>{if(lo>=hi)return;const mid=(lo+hi)>>1;push(0,`Split range ${lo}–${hi}.`,[lo,mid,hi],{lo,mid,hi});sort(lo,mid);sort(mid+1,hi);let i=lo,j=mid+1;const temp:number[]=[];while(i<=mid&&j<=hi){push(2,`Compare ${a[i]} and ${a[j]} for merging.`,[i,j],{lo,hi});temp.push(a[i]<=a[j]?a[i++]:a[j++]);}while(i<=mid)temp.push(a[i++]);while(j<=hi)temp.push(a[j++]);temp.forEach((v,k)=>{a[lo+k]=v;push(3,`Write ${v} from the temporary array.`,[lo+k],{lo,hi});});};sort(0,a.length-1);}
+ if(key==='quick'){const sort=(lo:number,hi:number)=>{if(lo>hi)return;if(lo===hi){done.add(lo);return;}const pivot=a[hi];let i=lo;push(0,`Choose pivot ${pivot}.`,[hi],{lo,hi,pivot});for(let j=lo;j<hi;j++){push(1,`Compare ${a[j]} with pivot ${pivot}.`,[j,hi],{i,j,pivot});if(a[j]<pivot){[a[i],a[j]]=[a[j],a[i]];push(2,'Move value into the smaller partition.',[i,j],{i,j,pivot});i++;}}[a[i],a[hi]]=[a[hi],a[i]];done.add(i);push(3,`Pivot fixed at ${i}.`,[i],{pivot});sort(lo,i-1);sort(i+1,hi);};sort(0,a.length-1);}
+ if(algorithms[key].group==='Sorting'){a.forEach((_,i)=>done.add(i));push(algorithms[key].code.length-1,'Complete. Values are sorted in ascending order.');return steps;}
+ if(key==='linear'){for(let i=0;i<a.length;i++){push(1,`Check ${a[i]} against target ${target}.`,[i],{i,target});if(a[i]===target){push(2,`Found at index ${i}.`,[i],{i,target},i);return steps;}}push(3,'Target not found.',[],{target},-1);return steps;}
+ let low=0,high=a.length-1;while(low<=high){const mid=(low+high)>>1;push(1,`Inspect midpoint ${mid}: ${a[mid]}.`,[low,mid,high],{low,mid,high,target});if(a[mid]===target){push(2,`Found at index ${mid}.`,[mid],{low,mid,high,target},mid);return steps;}if(key==='binary'){if(a[mid]<target)low=mid+1;else high=mid-1;push(3,'Discard the half without the target.',[],{low,high,target});}else{const leftSorted=a[low]<=a[mid];push(3,`${leftSorted?'Left':'Right'} half is sorted.`,[low,mid,high],{low,mid,high,target});if(leftSorted){if(a[low]<=target&&target<a[mid])high=mid-1;else low=mid+1;}else{if(a[mid]<target&&target<=a[high])low=mid+1;else high=mid-1;}push(4,'Keep the half that can contain the target.',[],{low,high,target});}}
+ push(key==='binary'?4:5,'Target not found.',[],{target},-1);return steps;
+}

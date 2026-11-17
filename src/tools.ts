@@ -1,0 +1,10 @@
+import type {Algorithm} from './algorithms';
+import type {GraphAlgorithm} from './graphs';
+import type {Process,SchedulingAlgorithm} from './scheduling';
+export type BaseTool={title:string;reason:string;illustrative:boolean};
+export type ArrayTool=BaseTool&{tool:'array';algorithm:Algorithm;values:number[];target:number};
+export type GraphTool=BaseTool&{tool:'graph';algorithm:GraphAlgorithm;nodes:string[];edges:{source:string;target:string;weight:number}[];directed:boolean;source:string;target:string};
+export type ScheduleTool=BaseTool&{tool:'schedule';algorithm:SchedulingAlgorithm;processes:Process[];quantum:number};
+export type GeneralTool=BaseTool&{tool:'general';layout:'flow'|'sequence'|'cycle'|'comparison';nodes:{id:string;label:string}[];links:{source:string;target:string;label:string}[];scenes:{caption:string;active:string[]}[]};
+export type Tool=ArrayTool|GraphTool|ScheduleTool|GeneralTool;
+export type Plan={visual_note?:string;answer:string;outside_page:boolean;compare:boolean;evidence:string[];tools:Tool[]};

@@ -1,18 +1,30 @@
 {
   "manifest_version": 3,
-  "name": "AI Page Chat",
-  "version": "1.0",
-  "description": "Ask questions about the current webpage using AI",
-
+  "name": "Askly - DSA Playground",
+  "version": "0.3.0",
+  "minimum_chrome_version": "116",
+  "description": "Interactive DSA alongside any webpage",
   "permissions": [
+    "activeTab",
+    "scripting",
+    "sidePanel",
+    "storage",
     "tabs"
   ],
-
   "host_permissions": [
     "http://127.0.0.1:8000/*"
   ],
-
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "popup.html"
-  }
+    "default_title": "Open Askly"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ]
 }
